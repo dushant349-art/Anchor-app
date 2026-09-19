@@ -1,0 +1,16 @@
+{
+  "name": "anchor-roadmap-server",
+  "version": "1.0.0",
+  "description": "Backend that generates AI goal roadmaps for the Anchor app using your Anthropic API key.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}
