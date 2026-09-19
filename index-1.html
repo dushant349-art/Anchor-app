@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Anchor">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7C5CFC">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Anchor — Habit Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F3FF;
+    --surface: #FFFFFF;
+    --surface-raised: #FBFAFF;
+    --line: #E6E1FA;
+    --text: #2B2440;
+    --text-muted: #746C93;
+    --text-faint: #B4ACD1;
+
+    --purple: #7C5CFC; --purple-shadow:#5E3FDB; --purple-dim:#EBE5FF;
+    --green: #58CC02; --green-shadow:#46A302; --green-dim:#E4F7D6;
+    --gold: #FFC107; --gold-shadow:#E0A400; --gold-dim:#FFF3D0;
+    --pink: #FF4B7E; --pink-shadow:#E22F60; --pink-dim:#FFE1EA;
+    --blue: #1CB0F6; --blue-shadow:#0D8FD1; --blue-dim:#DDF3FE;
+    font-family: 'Nunito', -apple-system, sans-serif;
+  }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #191426; --surface: #241C38; --surface-raised: #2C2244;
+      --line: #3A2E56; --text: #F2EFFA; --text-muted: #A99FC9; --text-faint: #6C6191;
+      --purple-dim:#332757; --green-dim:#213A16; --gold-dim:#3A2E0C; --pink-dim:#3B1A28; --blue-dim:#123244;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #191426; --surface: #241C38; --surface-raised: #2C2244;
+    --line: #3A2E56; --text: #F2EFFA; --text-muted: #A99FC9; --text-faint: #6C6191;
+    --purple-dim:#332757; --green-dim:#213A16; --gold-dim:#3A2E0C; --pink-dim:#3B1A28; --blue-dim:#123244;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; background: var(--bg); color: var(--text); min-height:100vh; display:flex; justify-content:center; }
+  #app { width:100%; max-width:480px; min-height:100vh; display:flex; flex-direction:column; position:relative; overflow-x:hidden; }
+
+  header.top { padding: 22px 18px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .brand-emoji { font-size:30px; }
+  h1.hello { font-family:'Fredoka',sans-serif; font-weight:600; font-size:21px; margin:0; }
+  .eyebrow { color: var(--text-muted); font-size:12px; margin:0; font-weight:700; }
+  .gear { width:40px; height:40px; border-radius:14px; border:none; background:var(--surface); box-shadow:0 3px 0 var(--line); color: var(--text-muted); font-size:17px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+
+  .xp-strip { margin: 0 18px 16px; background:var(--surface); border-radius:18px; padding:14px 16px; box-shadow:0 3px 0 var(--line); }
+  .xp-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .xp-level { font-family:'Fredoka',sans-serif; font-weight:600; font-size:14px; color: var(--purple); }
+  .xp-count { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12.5px; color: var(--text-muted); }
+  .xp-track { height:12px; background: var(--purple-dim); border-radius:999px; overflow:hidden; }
+  .xp-fill { height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:999px; transition:width .5s cubic-bezier(.34,1.56,.64,1); }
+  .mascot-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+  .mascot-emoji { font-size:22px; }
+  .mascot-text { font-size:12.5px; color: var(--text-muted); font-weight:700; }
+
+  #reminderPanel { margin: 0 18px 16px; background:var(--surface); border-radius:18px; padding:16px; display:none; box-shadow:0 3px 0 var(--line); }
+  #reminderPanel.open { display:block; }
+  #reminderPanel p.rp-title { font-family:'Fredoka',sans-serif; font-weight:600; font-size:14px; margin:0 0 10px; color:var(--purple); }
+  .rp-row { display:flex; align-items:center; gap:10px; }
+  .rp-row input[type=time] { background: var(--bg); border:2px solid var(--line); color:var(--text); border-radius:12px; padding:9px 10px; font-family:'Nunito',sans-serif; font-weight:700; font-size:14px; flex:1; }
+  .rp-row button { background: var(--purple); box-shadow:0 3px 0 var(--purple-shadow); color:#fff; border:none; border-radius:12px; padding:10px 16px; font-weight:800; font-size:13px; cursor:pointer; }
+  .rp-status { font-size:11.5px; color: var(--text-muted); margin:10px 0 0; font-weight:600; }
+
+  main { flex:1; padding:0 18px 104px; overflow-x:hidden; }
+  section.view { display:none; }
+  section.view.active { display:block; animation: fadein .25s ease; }
+  @keyframes fadein { from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .focus-card { background: linear-gradient(160deg, var(--blue-dim), var(--surface) 60%); border-radius:24px; padding:26px 18px; text-align:center; margin-bottom:22px; box-shadow:0 4px 0 var(--line); }
+  .focus-label { color: var(--blue); font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; margin:0 0 14px; }
+  .ring-wrap { position:relative; width:180px; height:180px; margin:0 auto 18px; }
+  .ring-wrap svg { transform:rotate(-90deg); }
+  .ring-bg { fill:none; stroke: var(--blue-dim); stroke-width:12; }
+  .ring-fg { fill:none; stroke:url(#blueGrad); stroke-width:12; stroke-linecap:round; transition:stroke-dashoffset .3s linear; }
+  .timer-readout { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:36px; font-weight:700; color:var(--text); }
+  .mode-row { display:flex; gap:7px; justify-content:center; margin-bottom:18px; flex-wrap:wrap; }
+  .mode-pill { border:2px solid var(--line); background: var(--surface); color:var(--text-muted); font-family:'Nunito',sans-serif; font-size:12px; font-weight:800; padding:7px 12px; border-radius:999px; cursor:pointer; }
+  .mode-pill.active { border-color:var(--blue); color:#fff; background:var(--blue); }
+  .timer-controls { display:flex; gap:10px; justify-content:center; }
+  .btn { font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; border-radius:14px; border:none; padding:13px 26px; cursor:pointer; }
+  .btn-primary { background:var(--blue); box-shadow:0 4px 0 var(--blue-shadow); color:#fff; }
+  .btn-primary:active { transform:translateY(2px); box-shadow:0 2px 0 var(--blue-shadow); }
+  .btn-ghost { background:var(--surface); box-shadow:0 4px 0 var(--line); color:var(--text-muted); }
+  .btn-ghost:active { transform:translateY(2px); box-shadow:0 2px 0 var(--line); }
+
+  .section-title { font-family:'Fredoka',sans-serif; font-size:17px; font-weight:600; margin:0 0 3px; }
+  .section-sub { color:var(--text-muted); font-size:12.5px; margin:0 0 12px; font-weight:600; }
+
+  .cat-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px; }
+  .cat-chip { flex-shrink:0; display:flex; align-items:center; gap:5px; border:2px solid var(--line); background:var(--surface); color:var(--text-muted); font-size:12px; font-weight:800; padding:7px 12px; border-radius:999px; cursor:pointer; }
+  .cat-chip.active { color:#fff; border-color:transparent; }
+
+  .habit-card { display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:16px; background:var(--surface); box-shadow:0 3px 0 var(--line); margin-bottom:9px; }
+  .cat-icon { width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .check { width:26px; height:26px; border-radius:9px; border:2.5px solid var(--line); flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--surface); }
+  .check.done { background:var(--green); border-color:var(--green-shadow); }
+  .check.done::after { content:""; width:8px; height:13px; border-right:3px solid #fff; border-bottom:3px solid #fff; transform:rotate(45deg) translate(-1px,-2px); }
+  .habit-info { flex:1; min-width:0; }
+  .habit-name { font-size:14px; font-weight:800; margin:0; }
+  .habit-name.done-text { color:var(--text-faint); text-decoration:line-through; }
+  .habit-streak { font-size:11.5px; color:var(--text-muted); margin:2px 0 0; font-weight:700; }
+  .habit-del { background:none; border:none; color:var(--text-faint); font-size:18px; line-height:1; padding:4px; cursor:pointer; }
+
+  .add-habit-box { background:var(--surface); border-radius:18px; padding:14px; margin-top:14px; box-shadow:0 3px 0 var(--line); }
+  .add-habit-row { display:flex; gap:8px; margin-bottom:10px; }
+  .add-habit-row input { flex:1; background: var(--bg); border:2px solid var(--line); border-radius:12px; padding:11px 13px; color:var(--text); font-family:'Nunito',sans-serif; font-weight:700; font-size:14px; }
+  .add-habit-row input::placeholder { color:var(--text-faint); font-weight:600; }
+  .add-habit-row button { background:var(--green); box-shadow:0 3px 0 var(--green-shadow); border:none; color:#fff; border-radius:12px; padding:0 18px; font-size:19px; font-weight:700; cursor:pointer; }
+  .new-cat-row { display:flex; gap:6px; flex-wrap:wrap; }
+  .new-cat-pill { border:2px solid var(--line); background:var(--surface); color:var(--text-muted); font-size:11.5px; font-weight:800; padding:6px 11px; border-radius:999px; cursor:pointer; }
+
+  .empty { text-align:center; padding:24px 10px; color:var(--text-faint); font-size:13px; font-weight:700; line-height:1.6; }
+
+  /* Goals / Roadmap */
+  .goal-box { background:var(--surface); border-radius:18px; padding:14px; margin-bottom:16px; box-shadow:0 3px 0 var(--line); }
+  .goal-input-row { display:flex; gap:8px; margin-bottom:4px; }
+  .goal-input-row input { flex:1; background: var(--bg); border:2px solid var(--line); border-radius:12px; padding:11px 13px; color:var(--text); font-family:'Nunito',sans-serif; font-weight:700; font-size:14px; }
+  .goal-input-row input::placeholder { color:var(--text-faint); font-weight:600; }
+  .goal-gen-btn { background:var(--purple); box-shadow:0 3px 0 var(--purple-shadow); border:none; color:#fff; border-radius:12px; padding:0 16px; font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; font-family:'Fredoka',sans-serif; }
+  .goal-gen-btn:disabled { opacity:0.6; cursor:default; }
+  .goal-hint { font-size:11px; color:var(--text-faint); font-weight:600; margin:8px 0 0; line-height:1.5; }
+
+  .goal-card { background:var(--surface); border-radius:18px; padding:16px; margin-bottom:12px; box-shadow:0 3px 0 var(--line); }
+  .goal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .goal-title { font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; margin:0; flex:1; }
+  .goal-del { background:none; border:none; color:var(--text-faint); font-size:18px; line-height:1; padding:2px 4px; cursor:pointer; flex-shrink:0; }
+  .goal-progress-track { height:9px; background:var(--purple-dim); border-radius:999px; overflow:hidden; margin-bottom:4px; }
+  .goal-progress-fill { height:100%; background:linear-gradient(90deg, var(--purple), var(--pink)); border-radius:999px; transition:width .4s cubic-bezier(.34,1.56,.64,1); }
+  .goal-progress-label { font-size:11px; color:var(--text-muted); font-weight:700; margin:0 0 12px; }
+  .goal-step { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-top:1px solid var(--line); }
+  .goal-step:first-of-type { border-top:none; }
+  .goal-step-num { width:22px; height:22px; border-radius:999px; background:var(--purple-dim); color:var(--purple); font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; font-family:'JetBrains Mono',monospace; }
+  .goal-step.done .goal-step-num { background:var(--green); color:#fff; }
+  .goal-step-body { flex:1; min-width:0; }
+  .goal-step-text { font-size:13px; font-weight:700; line-height:1.4; cursor:pointer; }
+  .goal-step.done .goal-step-text { color:var(--text-faint); text-decoration:line-through; }
+  .goal-step-when { display:inline-block; margin-top:3px; font-size:10px; font-weight:800; color:var(--purple); background:var(--purple-dim); padding:2px 8px; border-radius:999px; }
+  .goal-step.done .goal-step-when { color:var(--text-faint); background:var(--line); }
+  .goal-target { font-size:11px; color:var(--text-muted); font-weight:700; margin:-6px 0 10px; }
+
+  .loading-row { display:flex; align-items:center; gap:10px; padding:10px 2px; color:var(--text-muted); font-size:12.5px; font-weight:700; }
+  .spinner { width:16px; height:16px; border-radius:999px; border:3px solid var(--purple-dim); border-top-color:var(--purple); animation:spin .7s linear infinite; flex-shrink:0; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* Rewards */
+  .level-hero { background: linear-gradient(160deg, var(--purple), #A78BFA); border-radius:24px; padding:24px 20px; margin-bottom:22px; text-align:center; box-shadow:0 5px 0 var(--purple-shadow); }
+  .level-emoji { font-size:44px; display:block; margin-bottom:6px; }
+  .level-name { font-family:'Fredoka',sans-serif; font-size:20px; font-weight:600; margin:0 0 12px; color:#fff; }
+  .level-bar-track { height:11px; background:rgba(255,255,255,0.3); border-radius:999px; overflow:hidden; margin-bottom:8px; }
+  .level-bar-fill { height:100%; background:#FFC107; border-radius:999px; transition:width .5s cubic-bezier(.34,1.56,.64,1); }
+  .level-next { font-size:12px; color:rgba(255,255,255,0.85); margin:0; font-weight:700; }
+
+  .badge-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; margin-bottom:8px; }
+  .badge-tile { background:var(--surface); border-radius:16px; padding:13px 8px; text-align:center; box-shadow:0 3px 0 var(--line); }
+  .badge-tile.locked { opacity:0.32; filter:grayscale(0.6); }
+  .badge-emoji { font-size:24px; margin-bottom:6px; display:block; }
+  .badge-name { font-size:10.5px; font-weight:800; margin:0; line-height:1.25; }
+
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:22px; }
+  .stat-box { background:var(--surface); border-radius:16px; padding:16px; box-shadow:0 3px 0 var(--line); }
+  .stat-num { font-family:'Fredoka',sans-serif; font-size:26px; font-weight:600; margin:0; color:var(--pink); }
+  .stat-name { color:var(--text-muted); font-size:11.5px; margin:4px 0 0; font-weight:700; }
+  .week-strip { display:flex; gap:6px; margin-bottom:20px; }
+  .week-day { flex:1; text-align:center; }
+  .week-day .dow { font-size:10.5px; color:var(--text-faint); margin-bottom:6px; font-weight:800; }
+  .week-dot { width:100%; aspect-ratio:1; border-radius:10px; background:var(--surface); box-shadow:0 2px 0 var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--text-faint); font-weight:800; }
+  .week-dot.hit { background:var(--green); color:#fff; }
+
+  .toast { position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-70px); z-index:60; background:var(--purple); color:#fff; border-radius:16px; padding:13px 20px; font-size:13.5px; font-weight:800; font-family:'Fredoka',sans-serif; box-shadow:0 5px 0 var(--purple-shadow); transition:transform .35s cubic-bezier(.34,1.56,.64,1); max-width:88%; text-align:center; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  .confetti-piece { position:fixed; top:-10px; width:8px; height:8px; z-index:55; pointer-events:none; border-radius:2px; }
+
+  nav.tabbar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:var(--surface); border-top:2px solid var(--line); display:flex; padding:10px 10px calc(10px + env(safe-area-inset-bottom)); }
+  .tab-btn { flex:1; background:none; border:none; color:var(--text-faint); font-family:'Fredoka',sans-serif; font-size:11px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:4px; padding:4px 0; cursor:pointer; }
+  .tab-btn .ic { font-size:20px; }
+  .tab-btn.active { color:var(--purple); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="top">
+    <div class="brand">
+      <span class="brand-emoji">⚓</span>
+      <div><p class="eyebrow" id="dateLine">—</p><h1 class="hello" id="greeting">Anchor</h1></div>
+    </div>
+    <button class="gear" id="gearBtn">⚙</button>
+  </header>
+
+  <div class="xp-strip">
+    <div class="xp-top">
+      <span class="xp-level" id="xpLevelName">Seedling 🌱</span>
+      <span class="xp-count" id="xpCount">0 XP</span>
+    </div>
+    <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    <div class="mascot-row">
+      <span class="mascot-emoji" id="mascotEmoji">🙂</span>
+      <span class="mascot-text" id="mascotText">Let's get started!</span>
+    </div>
+  </div>
+
+  <div id="reminderPanel">
+    <p class="rp-title">⏰ Daily reminder</p>
+    <div class="rp-row">
+      <input type="time" id="reminderTime" value="20:00">
+      <button id="reminderSaveBtn">Set</button>
+    </div>
+    <p class="rp-status" id="reminderStatus"></p>
+  </div>
+
+  <main>
+    <section class="view active" id="view-today">
+      <div class="focus-card">
+        <p class="focus-label">🎯 Focus Session</p>
+        <div class="ring-wrap">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <defs>
+              <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#1CB0F6"/>
+                <stop offset="100%" stop-color="#7C5CFC"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="90" cy="90" r="76"></circle>
+            <circle class="ring-fg" id="ringFg" cx="90" cy="90" r="76" stroke-dasharray="477.5" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="timer-readout" id="timerReadout">25:00</div>
+        </div>
+        <div class="mode-row">
+          <button class="mode-pill active" data-mins="25" data-label="Focus session">Focus 25</button>
+          <button class="mode-pill" data-mins="5" data-label="Short break">Break 5</button>
+          <button class="mode-pill" data-mins="15" data-label="Long break">Long 15</button>
+          <button class="mode-pill" data-mins="custom" data-label="Focus session">Custom</button>
+        </div>
+        <div class="timer-controls">
+          <button class="btn btn-primary" id="startBtn">Start</button>
+          <button class="btn btn-ghost" id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <p class="section-title">✅ Today's Habits</p>
+      <p class="section-sub" id="habitSub">Complete them, earn XP!</p>
+      <div class="cat-scroll" id="catFilter"></div>
+      <div id="habitList"></div>
+
+      <div class="add-habit-box">
+        <div class="add-habit-row">
+          <input type="text" id="newHabitInput" placeholder="Add a new habit..." maxlength="60">
+          <button id="addHabitBtn">+</button>
+        </div>
+        <div class="new-cat-row" id="newCatRow"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-goals">
+      <p class="section-title">🗺️ Goal Roadmap</p>
+      <p class="section-sub">Type any big goal — it gets broken into small steps automatically.</p>
+      <div class="goal-box">
+        <div class="goal-input-row">
+          <input type="text" id="goalInput" placeholder="e.g. Learn to play guitar" maxlength="120">
+        </div>
+        <div class="goal-input-row">
+          <input type="text" id="goalTimeframe" placeholder="Target time (optional) — e.g. 2 months" maxlength="40">
+          <button class="goal-gen-btn" id="goalGenBtn">✨ Build roadmap</button>
+        </div>
+        <p class="goal-hint">Describe any goal, big or small, and optionally a deadline — a time-paced roadmap of small, doable steps will be generated for you to check off one by one.</p>
+      </div>
+      <div id="goalLoading"></div>
+      <div id="goalList"></div>
+    </section>
+
+    <section class="view" id="view-rewards">
+      <p class="section-title">🏆 Rewards</p>
+      <p class="section-sub">Every small step counts.</p>
+      <div class="level-hero">
+        <span class="level-emoji" id="levelEmoji">🌱</span>
+        <p class="level-name" id="levelName">Seedling</p>
+        <div class="level-bar-track"><div class="level-bar-fill" id="levelBarFill" style="width:0%"></div></div>
+        <p class="level-next" id="levelNext"></p>
+      </div>
+      <p class="section-title" style="font-size:15px;">🎖️ Badges</p>
+      <p class="section-sub" id="badgeCount">0 / 18 unlocked</p>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </section>
+
+    <section class="view" id="view-progress">
+      <p class="section-title">📊 Progress</p>
+      <p class="section-sub">Overview of the last 7 days.</p>
+      <div class="stat-grid">
+        <div class="stat-box"><p class="stat-num" id="statSessions">0</p><p class="stat-name">Focus sessions today</p></div>
+        <div class="stat-box"><p class="stat-num" id="statStreak">0</p><p class="stat-name">Longest streak</p></div>
+      </div>
+      <div class="week-strip" id="weekStrip"></div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="today"><span class="ic">🏠</span>Today</button>
+    <button class="tab-btn" data-view="goals"><span class="ic">🗺️</span>Goals</button>
+    <button class="tab-btn" data-view="rewards"><span class="ic">🏆</span>Rewards</button>
+    <button class="tab-btn" data-view="progress"><span class="ic">📊</span>Progress</button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function() {
+  // Frontend and backend are served from the same deployment (see README),
+  // so this is just a relative path — no URL to edit here.
+  var ROADMAP_API_URL = '/api/roadmap';
+
+  var STORE_KEY = 'anchor_data_v3';
+  var todayStr = new Date().toISOString().slice(0,10);
+
+  var CATEGORIES = [
+    { id:'health', name:'Health', icon:'🌿', color:'green' },
+    { id:'study', name:'Study', icon:'📘', color:'blue' },
+    { id:'work', name:'Work', icon:'💼', color:'gold' },
+    { id:'detox', name:'Detox', icon:'📵', color:'pink' },
+    { id:'other', name:'Other', icon:'⚓', color:'purple' }
+  ];
+  function catById(id) { return CATEGORIES.find(function(c){ return c.id === id; }) || CATEGORIES[4]; }
+
+  function defaultState() {
+    return {
+      habits: [
+        { id:'h1', name:'Drink 8 glasses of water', category:'health', log:{} },
+        { id:'h2', name:'Keep phone away for 1 hour in the morning', category:'detox', log:{} },
+        { id:'h3', name:'30 min of study or a new skill', category:'study', log:{} },
+        { id:'h4', name:'Finish one important task', category:'work', log:{} }
+      ],
+      goals: [],
+      sessionLog: {}, totalPoints: 0, lifetimeChecks: 0,
+      earlyBird:false, nightOwl:false,
+      reminder: { enabled:false, time:'20:00', lastFired:'' }
+    };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      var old = !raw ? (localStorage.getItem('anchor_data_v2') || localStorage.getItem('anchor_data_v1')) : null;
+      if (!raw && !old) return defaultState();
+      var parsed = JSON.parse(raw || old);
+      if (!parsed.habits) parsed.habits = [];
+      if (!parsed.goals) parsed.goals = [];
+      if (!parsed.sessionLog) parsed.sessionLog = {};
+      if (typeof parsed.totalPoints !== 'number') parsed.totalPoints = 0;
+      if (typeof parsed.lifetimeChecks !== 'number') parsed.lifetimeChecks = 0;
+      if (typeof parsed.earlyBird !== 'boolean') parsed.earlyBird = false;
+      if (typeof parsed.nightOwl !== 'boolean') parsed.nightOwl = false;
+      if (!parsed.reminder) parsed.reminder = { enabled:false, time:'20:00', lastFired:'' };
+      parsed.habits.forEach(function(h,i){ if(!h.id) h.id='h'+i+'_'+Date.now(); if(!h.category) h.category='other'; if(!h.log) h.log={}; });
+      parsed.goals.forEach(function(g,i){
+        if(!g.id) g.id='g'+i+'_'+Date.now();
+        if(!g.steps) g.steps=[];
+        g.steps.forEach(function(s){ if (typeof s.when !== 'string') s.when=''; });
+        if (typeof g.timeframeLabel !== 'string') g.timeframeLabel='';
+        if (typeof g.targetDays !== 'number') g.targetDays=null;
+        if (!g.createdAt) g.createdAt = todayStr;
+      });
+      return parsed;
+    } catch(e) { return defaultState(); }
+  }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e) {} }
+  var state = load();
+  var activeCatFilter = 'all';
+
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2400);
+  }
+  function spawnConfetti() {
+    var colors = ['#7C5CFC','#58CC02','#FFC107','#FF4B7E','#1CB0F6'];
+    for (var i = 0; i < 24; i++) {
+      var el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = (Math.random()*100) + 'vw';
+      el.style.background = colors[Math.floor(Math.random()*colors.length)];
+      el.style.transform = 'rotate(' + (Math.random()*360) + 'deg)';
+      document.body.appendChild(el);
+      var duration = 1400 + Math.random()*900;
+      var drift = (Math.random()-0.5)*140;
+      el.animate([
+        { transform: el.style.transform + ' translate(0,0)', opacity:1 },
+        { transform: el.style.transform + ' translate(' + drift + 'px, 100vh)', opacity:0.2 }
+      ], { duration: duration, easing:'ease-in' });
+      setTimeout(function(node){ return function(){ node.remove(); }; }(el), duration + 100);
+    }
+  }
+
+  var dowNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var now = new Date();
+  document.getElementById('dateLine').textContent = dowNames[now.getDay()] + ', ' + now.getDate() + ' ' + monthNames[now.getMonth()];
+  var hr = now.getHours();
+  document.getElementById('greeting').textContent = hr < 12 ? 'Good morning' : (hr < 18 ? 'Good afternoon' : 'Good evening');
+
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+      document.getElementById('view-' + btn.dataset.view).classList.add('active');
+      if (btn.dataset.view === 'progress') renderProgress();
+      if (btn.dataset.view === 'rewards') renderRewards();
+      if (btn.dataset.view === 'goals') renderGoals();
+    });
+  });
+
+  var gearBtn = document.getElementById('gearBtn');
+  var reminderPanel = document.getElementById('reminderPanel');
+  gearBtn.addEventListener('click', function(){ reminderPanel.classList.toggle('open'); });
+  document.getElementById('reminderTime').value = state.reminder.time || '20:00';
+  updateReminderStatus();
+  document.getElementById('reminderSaveBtn').addEventListener('click', function() {
+    var time = document.getElementById('reminderTime').value;
+    if (!time) return;
+    state.reminder.time = time; state.reminder.enabled = true; save();
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission().then(function(perm){ updateReminderStatus(); if (perm==='granted') showToast('⏰ Reminder set — ' + time); });
+    } else { updateReminderStatus(); showToast('⏰ Reminder set — ' + time); }
+  });
+  function updateReminderStatus() {
+    var el = document.getElementById('reminderStatus');
+    if (!('Notification' in window)) { el.textContent = 'This browser does not support notifications.'; return; }
+    if (Notification.permission === 'denied') { el.textContent = 'Notifications are blocked — allow them in your browser settings.'; }
+    else if (state.reminder.enabled && Notification.permission === 'granted') { el.textContent = 'ON (' + state.reminder.time + '). This page needs to be open once that day.'; }
+    else { el.textContent = 'Permission is needed, and the page must be open for the reminder to fire.'; }
+  }
+  setInterval(function() {
+    if (!state.reminder.enabled || !('Notification' in window) || Notification.permission !== 'granted') return;
+    var n = new Date();
+    var current = (n.getHours()<10?'0':'')+n.getHours()+':'+(n.getMinutes()<10?'0':'')+n.getMinutes();
+    if (current === state.reminder.time && state.reminder.lastFired !== todayStr) {
+      try { new Notification('Anchor', { body:'Time to check your habits and get a focus session in! 🎯' }); state.reminder.lastFired = todayStr; save(); } catch(e){}
+    }
+  }, 20000);
+
+  function renderCatFilter() {
+    var wrap = document.getElementById('catFilter');
+    wrap.innerHTML = '';
+    var allChip = document.createElement('button');
+    allChip.className = 'cat-chip' + (activeCatFilter==='all'?' active':'');
+    allChip.style.background = activeCatFilter==='all' ? 'var(--purple)' : '';
+    allChip.textContent = '✨ All';
+    allChip.addEventListener('click', function(){ activeCatFilter='all'; renderCatFilter(); renderHabits(); });
+    wrap.appendChild(allChip);
+    CATEGORIES.forEach(function(c) {
+      var chip = document.createElement('button');
+      chip.className = 'cat-chip' + (activeCatFilter===c.id?' active':'');
+      chip.style.background = activeCatFilter===c.id ? 'var(--'+c.color+')' : '';
+      chip.innerHTML = c.icon + ' ' + c.name;
+      chip.addEventListener('click', function(){ activeCatFilter=c.id; renderCatFilter(); renderHabits(); });
+      wrap.appendChild(chip);
+    });
+  }
+  var selectedNewCat = 'other';
+  function renderNewCatRow() {
+    var wrap = document.getElementById('newCatRow');
+    wrap.innerHTML = '';
+    CATEGORIES.forEach(function(c) {
+      var pill = document.createElement('button');
+      pill.className = 'new-cat-pill';
+      pill.style.background = selectedNewCat===c.id ? 'var(--'+c.color+')' : '';
+      pill.style.color = selectedNewCat===c.id ? '#fff' : '';
+      pill.style.borderColor = selectedNewCat===c.id ? 'transparent' : '';
+      pill.innerHTML = c.icon + ' ' + c.name;
+      pill.addEventListener('click', function(){ selectedNewCat=c.id; renderNewCatRow(); });
+      wrap.appendChild(pill);
+    });
+  }
+  renderNewCatRow();
+
+  function dateKey(d) { return d.toISOString().slice(0,10); }
+  function computeStreak(habit) {
+    var streak=0, cursor=new Date(), guard=0;
+    while (guard<400) {
+      guard++;
+      var key = dateKey(cursor);
+      if (habit.log && habit.log[key]) { streak++; cursor.setDate(cursor.getDate()-1); }
+      else if (key === todayStr) { cursor.setDate(cursor.getDate()-1); continue; }
+      else break;
+    }
+    return streak;
+  }
+  function escapeHtml(s) { var div=document.createElement('div'); div.textContent=s; return div.innerHTML; }
+
+  function renderHabits() {
+    renderCatFilter();
+    var list = document.getElementById('habitList');
+    list.innerHTML = '';
+    var habits = state.habits.filter(function(h){ return activeCatFilter==='all' || h.category===activeCatFilter; });
+    if (habits.length === 0) { list.innerHTML = '<div class="empty">No habits in this category. Add one below! 👇</div>'; return; }
+    habits.forEach(function(habit) {
+      var cat = catById(habit.category);
+      var doneToday = !!(habit.log && habit.log[todayStr]);
+      var streak = computeStreak(habit);
+      var row = document.createElement('div');
+      row.className = 'habit-card';
+      row.innerHTML =
+        '<div class="cat-icon" style="background:var(--'+cat.color+'-dim)">'+cat.icon+'</div>'+
+        '<button class="check '+(doneToday?'done':'')+'" data-id="'+habit.id+'"></button>'+
+        '<div class="habit-info"><p class="habit-name '+(doneToday?'done-text':'')+'">'+escapeHtml(habit.name)+'</p>'+
+        '<p class="habit-streak">'+(streak>0 ? '🔥 '+streak+'-day streak' : 'Start a streak')+'</p></div>'+
+        '<button class="habit-del" data-id="'+habit.id+'">&times;</button>';
+      list.appendChild(row);
+    });
+    list.querySelectorAll('.check').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var habit = state.habits.find(function(h){ return h.id===btn.dataset.id; });
+        if (!habit) return;
+        if (!habit.log) habit.log = {};
+        var wasDone = !!habit.log[todayStr];
+        habit.log[todayStr] = !wasDone;
+        state.totalPoints = Math.max(0, state.totalPoints + (wasDone ? -10 : 10));
+        if (!wasDone) {
+          state.lifetimeChecks++;
+          var nowH = new Date().getHours();
+          if (nowH < 9) state.earlyBird = true;
+          if (nowH >= 22) state.nightOwl = true;
+        }
+        save();
+        renderHabits();
+        renderXpStrip();
+        if (!wasDone) checkNewBadges();
+      });
+    });
+    list.querySelectorAll('.habit-del').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        state.habits = state.habits.filter(function(h){ return h.id !== btn.dataset.id; });
+        save(); renderHabits();
+      });
+    });
+  }
+
+  document.getElementById('addHabitBtn').addEventListener('click', addHabit);
+  document.getElementById('newHabitInput').addEventListener('keydown', function(e){ if (e.key==='Enter') addHabit(); });
+  function addHabit() {
+    var input = document.getElementById('newHabitInput');
+    var name = input.value.trim();
+    if (!name) return;
+    state.habits.push({ id:'h_'+Date.now(), name:name, category:selectedNewCat, log:{} });
+    input.value=''; save(); renderHabits(); checkNewBadges();
+  }
+  renderHabits();
+
+  // ---------- Goal Roadmap (AI-generated) ----------
+  var goalGenBtn = document.getElementById('goalGenBtn');
+  var goalInput = document.getElementById('goalInput');
+  var goalTimeframeInput = document.getElementById('goalTimeframe');
+  goalGenBtn.addEventListener('click', handleGenerateRoadmap);
+  goalInput.addEventListener('keydown', function(e){ if (e.key==='Enter') handleGenerateRoadmap(); });
+  goalTimeframeInput.addEventListener('keydown', function(e){ if (e.key==='Enter') handleGenerateRoadmap(); });
+
+  // Parses things like "2 months", "6 weeks", "10 days", "1 year" -> {amount, unit} in days
+  function parseTimeframe(str) {
+    if (!str) return null;
+    var m = str.match(/(\d+(?:\.\d+)?)\s*(day|days|week|weeks|month|months|year|years)/i);
+    if (!m) return null;
+    var amount = parseFloat(m[1]);
+    var unit = m[2].toLowerCase();
+    var days = unit.indexOf('day') === 0 ? amount :
+      unit.indexOf('week') === 0 ? amount*7 :
+      unit.indexOf('month') === 0 ? amount*30 :
+      amount*365;
+    return { days: Math.round(days), label: str.trim() };
+  }
+  function addDays(dateStr, days) {
+    var d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return monthNames[d.getMonth()] + ' ' + d.getDate();
+  }
+
+  async function handleGenerateRoadmap() {
+    var text = goalInput.value.trim();
+    var timeframeRaw = goalTimeframeInput.value.trim();
+    if (!text) { showToast('Type a goal first ✏️'); return; }
+    var timeframe = parseTimeframe(timeframeRaw);
+    goalGenBtn.disabled = true;
+    var loadingEl = document.getElementById('goalLoading');
+    loadingEl.innerHTML = '<div class="loading-row"><span class="spinner"></span>Building a time-paced roadmap...</div>';
+    try {
+      var resp = await fetch(ROADMAP_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal: text, timeframe: timeframeRaw })
+      });
+      if (!resp.ok) throw new Error('bad response');
+      var result = await resp.json();
+      var rawSteps = (result && Array.isArray(result.steps)) ? result.steps : [];
+      var steps = rawSteps
+        .map(function(s){
+          if (typeof s === 'string') return { text: s.trim(), when: '' };
+          if (s && typeof s.text === 'string') return { text: s.text.trim(), when: (s.when||'').toString().trim() };
+          return null;
+        })
+        .filter(function(s){ return s && s.text; });
+      if (steps.length === 0) throw new Error('empty');
+      var goal = {
+        id: 'g_' + Date.now(),
+        title: text,
+        timeframeLabel: timeframe ? timeframe.label : '',
+        targetDays: timeframe ? timeframe.days : null,
+        steps: steps.map(function(s){ return { text: s.text, when: s.when, done:false }; }),
+        createdAt: todayStr
+      };
+      state.goals.unshift(goal);
+      state.totalPoints += 5;
+      save();
+      goalInput.value = '';
+      goalTimeframeInput.value = '';
+      loadingEl.innerHTML = '';
+      renderGoals();
+      renderXpStrip();
+      showToast('🗺️ Roadmap ready — ' + steps.length + ' steps!');
+    } catch (e) {
+      loadingEl.innerHTML = '';
+      showToast('Could not reach the roadmap server — check your connection and server URL.');
+    } finally {
+      goalGenBtn.disabled = false;
+    }
+  }
+
+  function renderGoals() {
+    var list = document.getElementById('goalList');
+    list.innerHTML = '';
+    if (state.goals.length === 0) {
+      list.innerHTML = '<div class="empty">No goals yet. Describe one above and get an instant step-by-step roadmap! 🚀</div>';
+      return;
+    }
+    state.goals.forEach(function(goal) {
+      var doneCount = goal.steps.filter(function(s){ return s.done; }).length;
+      var pct = goal.steps.length ? Math.round((doneCount/goal.steps.length)*100) : 0;
+      var card = document.createElement('div');
+      card.className = 'goal-card';
+      var stepsHtml = goal.steps.map(function(s, i) {
+        var whenHtml = s.when ? '<span class="goal-step-when">'+escapeHtml(s.when)+'</span>' : '';
+        return '<div class="goal-step '+(s.done?'done':'')+'" data-goal="'+goal.id+'" data-idx="'+i+'">'+
+          '<div class="goal-step-num">'+(s.done?'✓':(i+1))+'</div>'+
+          '<div class="goal-step-body"><div class="goal-step-text">'+escapeHtml(s.text)+'</div>'+whenHtml+'</div></div>';
+      }).join('');
+      var targetHtml = '';
+      if (goal.timeframeLabel) {
+        var targetDate = goal.targetDays ? addDays(goal.createdAt, goal.targetDays) : '';
+        targetHtml = '<p class="goal-target">🎯 Target: ' + escapeHtml(goal.timeframeLabel) + (targetDate ? ' (by ~' + targetDate + ')' : '') + '</p>';
+      }
+      card.innerHTML =
+        '<div class="goal-top"><p class="goal-title">'+escapeHtml(goal.title)+'</p><button class="goal-del" data-id="'+goal.id+'">&times;</button></div>'+
+        targetHtml +
+        '<div class="goal-progress-track"><div class="goal-progress-fill" style="width:'+pct+'%"></div></div>'+
+        '<p class="goal-progress-label">'+doneCount+' / '+goal.steps.length+' steps complete</p>'+
+        stepsHtml;
+      list.appendChild(card);
+    });
+    list.querySelectorAll('.goal-step').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var goal = state.goals.find(function(g){ return g.id === el.dataset.goal; });
+        if (!goal) return;
+        var idx = parseInt(el.dataset.idx, 10);
+        var step = goal.steps[idx];
+        if (!step) return;
+        var wasDone = step.done;
+        step.done = !wasDone;
+        state.totalPoints = Math.max(0, state.totalPoints + (wasDone ? -8 : 8));
+        var allDone = goal.steps.every(function(s){ return s.done; });
+        if (!wasDone && allDone) {
+          state.totalPoints += 25;
+          showToast('🎉 Goal complete: ' + goal.title + ' — +25 bonus XP');
+          spawnConfetti();
+        }
+        save();
+        renderGoals();
+        renderXpStrip();
+        if (!wasDone) checkNewBadges();
+      });
+    });
+    list.querySelectorAll('.goal-del').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        state.goals = state.goals.filter(function(g){ return g.id !== btn.dataset.id; });
+        save(); renderGoals();
+      });
+    });
+  }
+  renderGoals();
+
+  // ---------- Focus timer ----------
+  var modeMins=25, modeLabel='Focus session', totalSeconds=modeMins*60, remaining=totalSeconds, timerInterval=null, running=false;
+  var RADIUS=76, CIRC=2*Math.PI*RADIUS;
+  var ringFg=document.getElementById('ringFg'), readout=document.getElementById('timerReadout');
+  var startBtn=document.getElementById('startBtn'), resetBtn=document.getElementById('resetBtn');
+  ringFg.setAttribute('stroke-dasharray', CIRC.toFixed(1));
+  document.querySelectorAll('.mode-pill').forEach(function(pill) {
+    pill.addEventListener('click', function() {
+      if (running) return;
+      if (pill.dataset.mins === 'custom') {
+        var val = prompt('How many minutes should the focus session be?', '45');
+        var mins = parseInt(val, 10);
+        if (!mins || mins<=0 || mins>180) return;
+        document.querySelectorAll('.mode-pill').forEach(function(p){ p.classList.remove('active'); });
+        pill.classList.add('active'); pill.textContent = 'Custom ' + mins;
+        modeMins = mins; modeLabel = 'Focus session';
+      } else {
+        document.querySelectorAll('.mode-pill').forEach(function(p){ p.classList.remove('active'); });
+        pill.classList.add('active');
+        modeMins = parseInt(pill.dataset.mins, 10); modeLabel = pill.dataset.label;
+      }
+      totalSeconds = modeMins*60; remaining = totalSeconds; updateDisplay();
+    });
+  });
+  function updateDisplay() {
+    var m=Math.floor(remaining/60), s=remaining%60;
+    readout.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    var progress = 1-(remaining/totalSeconds);
+    ringFg.setAttribute('stroke-dashoffset', (CIRC*(1-progress)).toFixed(1));
+  }
+  function logSession() {
+    if (!state.sessionLog[todayStr]) state.sessionLog[todayStr] = { focus:0 };
+    if (modeLabel === 'Focus session') {
+      state.sessionLog[todayStr].focus = (state.sessionLog[todayStr].focus||0)+1;
+      state.totalPoints += 15;
+      checkNewBadges();
+    }
+    save(); renderXpStrip();
+  }
+  startBtn.addEventListener('click', function() {
+    if (running) { running=false; clearInterval(timerInterval); startBtn.textContent='Resume'; return; }
+    running=true; startBtn.textContent='Pause';
+    timerInterval = setInterval(function() {
+      remaining--;
+      if (remaining<=0) {
+        remaining=0; updateDisplay(); clearInterval(timerInterval); running=false; startBtn.textContent='Start';
+        logSession();
+        showToast(modeLabel==='Focus session' ? '🎉 Session complete — +15 XP' : '☕ Break complete');
+        if (modeLabel==='Focus session') spawnConfetti();
+        remaining=totalSeconds; setTimeout(updateDisplay,400);
+        return;
+      }
+      updateDisplay();
+    }, 1000);
+  });
+  resetBtn.addEventListener('click', function() {
+    running=false; clearInterval(timerInterval); remaining=totalSeconds; startBtn.textContent='Start'; updateDisplay();
+  });
+  updateDisplay();
+
+  // ---------- Levels ----------
+  var LEVELS = [
+    { min:0, name:'Seedling', emoji:'🌱' },
+    { min:100, name:'Sprout', emoji:'🌿' },
+    { min:300, name:'Sapling', emoji:'🌳' },
+    { min:700, name:'Mountain', emoji:'🏔️' },
+    { min:1500, name:'Legend', emoji:'👑' }
+  ];
+  function currentLevel() {
+    var level = LEVELS[0];
+    for (var i=0;i<LEVELS.length;i++) if (state.totalPoints >= LEVELS[i].min) level = LEVELS[i];
+    return level;
+  }
+  function renderXpStrip() {
+    var level = currentLevel();
+    var idx = LEVELS.indexOf(level);
+    var next = LEVELS[idx+1];
+    document.getElementById('xpLevelName').textContent = level.emoji + ' ' + level.name;
+    document.getElementById('xpCount').textContent = state.totalPoints + ' XP';
+    if (next) {
+      var pct = Math.min(100, Math.round(((state.totalPoints-level.min)/(next.min-level.min))*100));
+      document.getElementById('xpFill').style.width = pct + '%';
+    } else {
+      document.getElementById('xpFill').style.width = '100%';
+    }
+    var doneToday = state.habits.filter(function(h){ return h.log && h.log[todayStr]; }).length;
+    var totalToday = state.habits.length;
+    var pctDone = totalToday ? doneToday/totalToday : 0;
+    var mascot = pctDone===0 ? ['😴','Let us get started!'] : pctDone<0.5 ? ['🙂','Off to a good start!'] : pctDone<1 ? ['😃','Almost there!'] : ['🤩','Wow! A perfect day!'];
+    document.getElementById('mascotEmoji').textContent = mascot[0];
+    document.getElementById('mascotText').textContent = mascot[1];
+  }
+  renderXpStrip();
+
+  function totalLifetimeSessions() { var sum=0; Object.keys(state.sessionLog).forEach(function(k){ sum += (state.sessionLog[k].focus||0); }); return sum; }
+  function longestStreakOverall() { var longest=0; state.habits.forEach(function(h){ var s=computeStreak(h); if (s>longest) longest=s; }); return longest; }
+  function activeCategoryCount() { var set={}; state.habits.forEach(function(h){ set[h.category]=true; }); return Object.keys(set).length; }
+
+  var BADGES = [
+    { id:'first_step', emoji:'🐣', name:'First Step', test:function(){ return state.lifetimeChecks>=1; } },
+    { id:'checks10', emoji:'✅', name:'10 Checks', test:function(){ return state.lifetimeChecks>=10; } },
+    { id:'checks50', emoji:'✅', name:'50 Checks', test:function(){ return state.lifetimeChecks>=50; } },
+    { id:'checks100', emoji:'✅', name:'100 Checks', test:function(){ return state.lifetimeChecks>=100; } },
+    { id:'streak3', emoji:'🔥', name:'3-Day Streak', test:function(){ return longestStreakOverall()>=3; } },
+    { id:'streak7', emoji:'🔥', name:'7-Day Streak', test:function(){ return longestStreakOverall()>=7; } },
+    { id:'streak30', emoji:'🏔️', name:'30-Day Streak', test:function(){ return longestStreakOverall()>=30; } },
+    { id:'streak100', emoji:'👑', name:'100-Day Streak', test:function(){ return longestStreakOverall()>=100; } },
+    { id:'pts100', emoji:'⭐', name:'Century', test:function(){ return state.totalPoints>=100; } },
+    { id:'pts500', emoji:'💎', name:'500 Club', test:function(){ return state.totalPoints>=500; } },
+    { id:'pts1000', emoji:'🏆', name:'1000 Club', test:function(){ return state.totalPoints>=1000; } },
+    { id:'focus10', emoji:'⏱️', name:'Focused 10', test:function(){ return totalLifetimeSessions()>=10; } },
+    { id:'focus50', emoji:'🎯', name:'Focused 50', test:function(){ return totalLifetimeSessions()>=50; } },
+    { id:'focus100', emoji:'🚀', name:'Focused 100', test:function(){ return totalLifetimeSessions()>=100; } },
+    { id:'allrounder', emoji:'🧭', name:'All-Rounder', test:function(){ return activeCategoryCount()>=3; } },
+    { id:'fullhouse', emoji:'🏠', name:'Full House', test:function(){ return state.habits.length>=5; } },
+    { id:'earlybird', emoji:'🌅', name:'Early Bird', test:function(){ return state.earlyBird; } },
+    { id:'nightowl', emoji:'🦉', name:'Night Owl', test:function(){ return state.nightOwl; } }
+  ];
+  var seenBadges = {};
+  try { seenBadges = JSON.parse(localStorage.getItem('anchor_seen_badges_v2') || '{}'); } catch(e) { seenBadges = {}; }
+  function checkNewBadges() {
+    var any = false;
+    BADGES.forEach(function(b) {
+      if (b.test() && !seenBadges[b.id]) { seenBadges[b.id]=true; showToast('🎖️ Badge unlocked: ' + b.emoji + ' ' + b.name); any = true; }
+    });
+    if (any) spawnConfetti();
+    try { localStorage.setItem('anchor_seen_badges_v2', JSON.stringify(seenBadges)); } catch(e) {}
+  }
+
+  function renderRewards() {
+    var level = currentLevel();
+    var idx = LEVELS.indexOf(level);
+    var next = LEVELS[idx+1];
+    document.getElementById('levelEmoji').textContent = level.emoji;
+    document.getElementById('levelName').textContent = level.name;
+    if (next) {
+      var pct = Math.min(100, Math.round(((state.totalPoints-level.min)/(next.min-level.min))*100));
+      document.getElementById('levelBarFill').style.width = pct + '%';
+      document.getElementById('levelNext').textContent = (next.min - state.totalPoints) + ' XP to go — next: ' + next.emoji + ' ' + next.name;
+    } else {
+      document.getElementById('levelBarFill').style.width = '100%';
+      document.getElementById('levelNext').textContent = 'Top level — you have become a Legend! 👑';
+    }
+    var grid = document.getElementById('badgeGrid');
+    grid.innerHTML = '';
+    var unlockedCount = 0;
+    BADGES.forEach(function(b) {
+      var unlocked = b.test();
+      if (unlocked) unlockedCount++;
+      var tile = document.createElement('div');
+      tile.className = 'badge-tile' + (unlocked ? '' : ' locked');
+      tile.innerHTML = '<span class="badge-emoji">'+b.emoji+'</span><p class="badge-name">'+b.name+'</p>';
+      grid.appendChild(tile);
+    });
+    document.getElementById('badgeCount').textContent = unlockedCount + ' / ' + BADGES.length + ' unlocked';
+  }
+
+  function renderProgress() {
+    document.getElementById('statSessions').textContent = (state.sessionLog[todayStr] && state.sessionLog[todayStr].focus) || 0;
+    document.getElementById('statStreak').textContent = longestStreakOverall();
+    var strip = document.getElementById('weekStrip');
+    strip.innerHTML = '';
+    var dowShort = ['S','M','T','W','T','F','S'];
+    for (var i=6;i>=0;i--) {
+      var d = new Date(); d.setDate(d.getDate()-i);
+      var key = dateKey(d);
+      var anyDone = state.habits.some(function(h){ return h.log && h.log[key]; });
+      var col = document.createElement('div');
+      col.className = 'week-day';
+      col.innerHTML = '<div class="dow">'+dowShort[d.getDay()]+'</div><div class="week-dot '+(anyDone?'hit':'')+'">'+(anyDone?'✓':d.getDate())+'</div>';
+      strip.appendChild(col);
+    }
+  }
+
+  checkNewBadges();
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/service-worker.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
